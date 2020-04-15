@@ -2,10 +2,11 @@ import numpy as np
 
 class KMedoids():    
     
-    def __init__(self, n_clusters, tmax=100,printInfo=False):
+    def __init__(self, n_clusters, tmax=100,printInfo=False,init=None):
         self.n_clusters = n_clusters
         self.tmax = tmax
         self.printInfo = printInfo
+        self.init = init
         
     def fit(self,D):
         k = self.n_clusters
@@ -14,18 +15,7 @@ class KMedoids():
         # determine dimensions of distance matrix D
         m, n = D.shape
         N = n
-        
-        '''
-        # initialize k medoid indices thanks to HC results
-        M = np.zeros((k,1),dtype=int)
-        J = np.mean(D[np.ix_(NA_HC,NA_HC)],axis=1)
-        j = np.argmin(J)
-        M[0] = NA_HC[j]
 
-        J = np.mean(D[np.ix_(SSA_HC,SSA_HC)],axis=1)
-        j = np.argmin(J)
-        M[1] = SSA_HC[j]
-        '''
         # randomly initialize an array of k medoid indices
         M = self.safeInit(D,k,n)
 
@@ -73,16 +63,28 @@ class KMedoids():
         return self
 
     def safeInit(self,D,k,n):
-        M = np.sort(np.random.choice(n, k))
-        C = {}
-        J = np.argmin(D[:,M], axis=1)
-        for kappa in range(k):
-            C[kappa] = np.where(J==kappa)[0]
+        if (self.init == None):
+            M = np.sort(np.random.choice(n, k))
+            C = {}
+            J = np.argmin(D[:,M], axis=1)
+            for kappa in range(k):
+                C[kappa] = np.where(J==kappa)[0]
 
-        # update cluster medoids
-        for kappa in range(k):
-            if (len(D[np.ix_(C[kappa],C[kappa])]) == 0):
-                if (self.printInfo):
-                    print("Computing new init")
-                M = self.safeInit(D,k,n)
+            # update cluster medoids
+            for kappa in range(k):
+                if (len(D[np.ix_(C[kappa],C[kappa])]) == 0):
+                    if (self.printInfo):
+                        print("Computing new init")
+                    M = self.safeInit(D,k,n)
+        else:
+            # initialize k medoid indices thanks to HC results
+            M = np.zeros((k,1),dtype=int)
+            J = np.mean(D[np.ix_(self.init[0],self.init[0])],axis=1)
+            j = np.argmin(J)
+            M[0] = self.init[0][j]
+
+            J = np.mean(D[np.ix_(self.init[1],self.init[1])],axis=1)
+            j = np.argmin(J)
+            M[1] = self.init[1][j]
+            
         return M
