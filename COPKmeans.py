@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+
+# https://github.com/Behrouz-Babaki/COP-Kmeans
+
 import random
 import numpy as np
 
