@@ -1,0 +1,1 @@
+pkg load statistics;distance_matrix = dlmread('dist_EEG.csv');[Y,stress,disparities] = mdscale(distance_matrix,2)
