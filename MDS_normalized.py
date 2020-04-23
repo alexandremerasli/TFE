@@ -72,7 +72,8 @@ def _smacof_single(dissimilarities, metric=True, n_components=2, init=None,
     sim_flat_w = sim_flat[sim_flat != 0]
     if init is None:
         # Randomly choose initial configuration
-        X = random_state.rand(n_samples * n_components)
+        #X = random_state.rand(n_samples * n_components)
+        X = random_state.normal(0,1,n_samples * n_components)
         X = X.reshape((n_samples, n_components))
     else:
         # overrides the parameter p
@@ -129,7 +130,7 @@ def _smacof_single(dissimilarities, metric=True, n_components=2, init=None,
                 break
         old_stress = stress / dis
 
-    return X, stress, it + 1
+    return X, stress, it + 1, disparities
 
 
 def smacof(dissimilarities, metric=True, n_components=2, init=None, n_init=8,
@@ -232,7 +233,7 @@ def smacof(dissimilarities, metric=True, n_components=2, init=None, n_init=8,
 
     if n_jobs == 1:
         for it in range(n_init):
-            pos, stress, n_iter_ = _smacof_single(
+            pos, stress, n_iter_, disparities = _smacof_single(
                 dissimilarities, metric=metric,
                 n_components=n_components, init=init,
                 max_iter=max_iter, verbose=verbose,
@@ -250,16 +251,17 @@ def smacof(dissimilarities, metric=True, n_components=2, init=None, n_init=8,
                 init=init, max_iter=max_iter, verbose=verbose, eps=eps,
                 random_state=seed, normalize=normalize)
             for seed in seeds)
-        positions, stress, n_iters = zip(*results)
+        positions, stress, n_iters, disparities = zip(*results)
         best = np.argmin(stress)
         best_stress = stress[best]
         best_pos = positions[best]
         best_iter = n_iters[best]
+        best_disparities = disparities[best]
 
     if return_n_iter:
-        return best_pos, best_stress, best_iter
+        return best_pos, best_stress, disparities, best_iter
     else:
-        return best_pos, best_stress
+        return best_pos, best_stress, disparities
 
 
 class MDS(BaseEstimator):
@@ -388,7 +390,7 @@ class MDS(BaseEstimator):
             raise ValueError("Proximity must be 'precomputed' or 'euclidean'."
                              " Got %s instead" % str(self.dissimilarity))
 
-        self.embedding_, self.stress_, self.n_iter_ = smacof(
+        self.embedding_, self.stress_, self.disparities_, self.n_iter_ = smacof(
             self.dissimilarity_matrix_, metric=self.metric,
             n_components=self.n_components, init=init, n_init=self.n_init,
             n_jobs=self.n_jobs, max_iter=self.max_iter, verbose=self.verbose,
