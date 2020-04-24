@@ -109,8 +109,12 @@ def _smacof_single(dissimilarities, metric=True, n_components=2, init=None,
 
         # Use Stress-1
         if normalize:
-            stress = np.sqrt(stress /
-                             ((disparities.ravel() ** 2).sum() / 2))
+            if (metric):
+                stress = np.sqrt(stress /
+                                 ((disparities.ravel() ** 2).sum() / 2))
+            else:
+                stress = np.sqrt(stress /
+                                 ((dis.ravel() ** 2).sum() / 2))
 
         # Update X using the Guttman transform
         dis[dis == 0] = 1e-5
