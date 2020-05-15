@@ -16,7 +16,6 @@ subjects <- 1:N
 
 # Using a custom epoch_callback
 for (i in subjects) {
-  print(i)
   if (condition[i]==0) {
     conditionStr[i] <- "NA"  
   } else {
@@ -50,32 +49,48 @@ umap_plot <- function(x) {
 
 ## Correlation metric on study matrix
 
-library(ape)
-
-study_matrix <- read.csv('ISC_EEG.csv',sep=",",header = FALSE)
-study_matrix <- matrix(unlist(study_matrix, use.names=FALSE),nrow=26,ncol=26)
+# library(ape)
+# 
+# study_matrix <- read.csv('ISC_EEG.csv',sep=",",header = FALSE)
+# study_matrix <- matrix(unlist(study_matrix, use.names=FALSE),nrow=26,ncol=26)
+# # #set.seed(42) 
+# correlation <- cor(study_matrix, use = "pairwise.complete.obs", method = "pearson")
+# correlation <- 1 - correlation
+# pcoa_points <- pcoa(correlation, correction="none", rn=NULL)$vectors
+# points <- smallvis(pcoa_points, method = "umap", perplexity = 3, eta = 0.01, epoch_callback = umap_plot)
+# 
+# # points <- smallvis(1-study_matrix/3, method = "umap", perplexity = 3, eta = 0.01, epoch_callback = umap_plot)
+# 
+# #distance_matrix <- read.csv('dist_EEG_test.csv',sep=";",header = FALSE)
+# #
+# #
+# 
+# ## fuzzy clustering directly on distance study matrix
+# 
+# library(cluster)
+# 
+# distance_matrix <- read.csv('dist_EEG_normed.csv',sep=";",header = FALSE)
+# distance_matrix <- matrix(unlist(distance_matrix, use.names=FALSE),nrow=26,ncol=26)
 # #set.seed(42) 
-correlation <- cor(study_matrix, use = "pairwise.complete.obs", method = "pearson")
-correlation <- 1 - correlation
-pcoa_points <- pcoa(correlation, correction="none", rn=NULL)$vectors
-points <- smallvis(pcoa_points, method = "umap", perplexity = 3, eta = 0.01, epoch_callback = umap_plot)
+# fuzzClust <- fanny(distance_matrix, 2, diss=TRUE,memb.exp = 1.1)
+# print(sum(fuzzClust$clustering==condition+1)/N)
+# print(subjects[fuzzClust$clustering!=condition+1]-1)
 
-# points <- smallvis(1-study_matrix/3, method = "umap", perplexity = 3, eta = 0.01, epoch_callback = umap_plot)
+## Euclidean metric on initial distance matrix
+library(multiview)
+distance_matrix_EEG <- read.csv('dist_EEG_basic.csv',sep=";",header = FALSE)
+distance_matrix_EEG <- matrix(unlist(distance_matrix_EEG,use.names=FALSE),nrow=26,ncol=26)
 
-#distance_matrix <- read.csv('dist_EEG_test.csv',sep=";",header = FALSE)
-#
-#
+distance_matrix_EDA<- read.csv('dist_EDA_basic.csv',sep=";",header = FALSE)
+distance_matrix_EDA <- matrix(unlist(distance_matrix_EDA,use.names=FALSE),nrow=26,ncol=26)
 
-## fuzzy clustering directly on distance study matrix
+distance_matrix_IBI <- read.csv('dist_IBI_basic.csv',sep=";",header = FALSE)
+distance_matrix_IBI <- matrix(unlist(distance_matrix_IBI,use.names=FALSE),nrow=26,ncol=26)
 
-library(cluster)
-
-distance_matrix <- read.csv('dist_EEG_normed.csv',sep=";",header = FALSE)
-distance_matrix <- matrix(unlist(distance_matrix, use.names=FALSE),nrow=26,ncol=26)
 #set.seed(42) 
-fuzzClust <- fanny(distance_matrix, 2, diss=TRUE,memb.exp = 1.1)
-print(sum(fuzzClust$clustering==condition+1)/N)
-print(subjects[fuzzClust$clustering!=condition+1]-1)
+points <- mvmds(list(distance_matrix_EEG,distance_matrix_EDA,distance_matrix_IBI), k = 2)
+umap_plot(points)
+
 
 ## UMAP on initial distance matrix
 
