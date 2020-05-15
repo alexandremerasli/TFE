@@ -11,7 +11,8 @@ condition <- read.csv('condition.csv',sep=";",header = FALSE)
 conditionStr <- read.csv('condition.csv',sep=";",header = FALSE)
 condition <- unlist(condition, use.names=FALSE)
 conditionStr <- unlist(conditionStr, use.names=FALSE)
-subjects <- 1:length(condition)
+N <- length(condition)
+subjects <- 1:N
 
 # Using a custom epoch_callback
 for (i in subjects) {
@@ -41,7 +42,7 @@ umap_plot <- function(x) {
 #
 # ## Euclidean metric on normed distance matrix
 #
-# distance_matrix <- read.csv('dist_EEG_umap.csv',sep=";",header = FALSE)
+# distance_matrix <- read.csv('dist_EEG_normed.csv',sep=";",header = FALSE)
 # distance_matrix <- matrix(unlist(distance_matrix, use.names=FALSE),nrow=26,ncol=26)
 # set.seed(42)
 # points <- smallvis(distance_matrix, method = "umap", perplexity = 3, eta = 0.01, epoch_callback = umap_plot)
@@ -64,6 +65,18 @@ points <- smallvis(pcoa_points, method = "umap", perplexity = 3, eta = 0.01, epo
 #distance_matrix <- read.csv('dist_EEG_test.csv',sep=";",header = FALSE)
 #
 #
+
+## fuzzy clustering directly on distance study matrix
+
+library(cluster)
+
+distance_matrix <- read.csv('dist_EEG_normed.csv',sep=";",header = FALSE)
+distance_matrix <- matrix(unlist(distance_matrix, use.names=FALSE),nrow=26,ncol=26)
+#set.seed(42) 
+fuzzClust <- fanny(distance_matrix, 2, diss=TRUE,memb.exp = 1.1)
+print(sum(fuzzClust$clustering==condition+1)/N)
+print(subjects[fuzzClust$clustering!=condition+1]-1)
+
 ## UMAP on initial distance matrix
 
 # pcoa_points <- read.csv('dist_EEG_coordinates.csv',sep=";",header = FALSE)
