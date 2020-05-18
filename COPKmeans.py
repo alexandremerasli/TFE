@@ -4,12 +4,14 @@
 
 import random
 import numpy as np
+from sklearn.utils import check_random_state
+from sklearn.metrics import pairwise_distances
 
 class COPKmeans():    
     
     def __init__(self, n_clusters,must_link=[],cannot_link=[],
                initialization='kmpp',
-               max_iter=300, tol=1e-4):
+               max_iter=300, tol=1e-4,n_init=10):
         self.n_clusters = n_clusters
         self.ml = must_link
         self.cl = cannot_link
@@ -17,8 +19,41 @@ class COPKmeans():
         self.max_iter = max_iter
         self.tol = tol
         self.labels_ = None
+        self.n_init = n_init
         
     def fit(self,dataset):
+        n_init = self.n_init
+        random_state = check_random_state(None)
+
+        seeds = random_state.randint(np.iinfo(np.int32).max,size=n_init)
+        self.inertia_ = None
+        
+        for seed in seeds:
+            # run a COP k-means once
+            labels, inertia, centers = self.copkmeans_single(dataset)
+            # determine if these results are the best so far
+            if self.inertia_ is None or inertia < self.inertia_:
+                self.labels_ = labels.copy()
+                self.centers_ = centers.copy()
+                self.inertia_ = inertia.copy()
+                
+        return self
+    
+    def compute_inertia(self,dataset,labels):
+        subjects = np.arange(0,len(labels))
+        foundNA = subjects[labels==0]
+        cluster0 = dataset[labels==0]
+        center0 = np.mean(cluster0,axis=0)
+        foundSSA = subjects[labels==1]
+        cluster1 = dataset[labels==1]
+        center1 = np.mean(cluster1,axis=0)
+
+        distArray0 = pairwise_distances(cluster0,np.tile(center0,(cluster0.shape[0],1)))[:,0]
+        distArray1 = pairwise_distances(cluster1,np.tile(center1,(cluster1.shape[0],1)))[:,0]
+    
+        return np.sum(distArray0) + np.sum(distArray1)
+        
+    def copkmeans_single(self,dataset):
         ml = self.ml
         cl = self.cl
         initialization = self.init
@@ -58,9 +93,10 @@ class COPKmeans():
 
             centers = centers_
 
-        self.labels_ = np.array(clusters_)
-        self.centers_ = np.array(centers_)
-        return self
+        labels = np.array(clusters_)
+        inertia = self.compute_inertia(dataset,labels)
+        centers = np.array(centers_)
+        return labels, inertia, centers
 
     def l2_distance(self,point1, point2):
         return sum([(float(i)-float(j))**2 for (i, j) in zip(point1, point2)])
