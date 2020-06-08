@@ -1,6 +1,8 @@
 notebook==6.0.0
+
 numpy==1.17.0
 matplotlib==3.2.1
+pandas==1.0.4
 pyclustertend==1.4.9
 multiview==1.0
 scikit-learn==0.22.1
