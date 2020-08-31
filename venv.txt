@@ -1,0 +1,10 @@
+conda env create --force -f environment.yml
+conda activate clustering
+pip install --user ipykernel
+python3 -m ipykernel install --user --name=clustering
+
+Launch Jupyter Notebook
+/opt/anaconda3/bin/jupyter_mac.command ; exit;
+
+
+

@@ -45,7 +45,7 @@ def preprocess_mvmds(values):
     return p_matrix
 
 
-def mvmds(x, is_distance, k=2):
+def mvmds(x, is_distance, k=2, added=False):
     """
     Multiview MDS on a list of matrices.
 
@@ -101,14 +101,10 @@ def mvmds(x, is_distance, k=2):
         my_mat[i] = -my_views2 / 2
     cpc = cpcmv.MVCPC(k=k)
     common = cpc.fit_transform(my_mat)
-
-    ### Added part
-    a = np.diag(np.sqrt(common[0][:,0]))
-    return np.dot(common[1],a)
-    ### End of added part
-    
-    return common[1]
-
+    if (added):
+        return np.dot(common[1],np.diag(np.sqrt(common[0])[:,0]))
+    else:
+        return common[1]
 
 class MVMDS(BaseEstimator):
     """
@@ -147,8 +143,9 @@ class MVMDS(BaseEstimator):
         3446–57. doi:10.1016/j.csda.2010.03.010.
     """
 
-    def __init__(self, k=2):
+    def __init__(self, k=2, added=False):
         self.k = k
+        self.added = added
 
     def fit(self, x, is_distance):
         """
@@ -232,6 +229,6 @@ class MVMDS(BaseEstimator):
                 if x[i].shape[0] != x[j].shape[0]:
                     raise ValueError("Input data matrices have no same number "
                                      "of samples (rows).")
-        common = mvmds(x, is_distance, self.k)
+        common = mvmds(x, is_distance, self.k, self.added)
         self.components_ = common
         return self.components_
